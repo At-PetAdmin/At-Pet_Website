@@ -71,7 +71,15 @@ source: https://github.com/At-PetAdmin/At-Pet/blob/main/README_CN.md
 
 ## 部署配置
 
-没有指定托管平台，因此项目保留为独立静态站，没有创建托管账号或发布线上站点。
+### GitHub Pages
+
+工作流位于 `.github/workflows/pages.yml`。推送到 `main` 后自动安装锁定的依赖，构建并检查静态站，然后部署到 GitHub Pages。也可在 Actions 中手动运行 **Deploy documentation to GitHub Pages**。
+
+在仓库 **Settings → Pages → Build and deployment → Source** 中选择 **GitHub Actions**。部署使用 GitHub 自动提供的短期令牌，无需添加个人访问令牌或其他 Secret。
+
+站点地址：[https://at-petadmin.github.io/At-Pet_Website/](https://at-petadmin.github.io/At-Pet_Website/)。工作流从 Pages 配置读取域名与子路径，同时传给构建与链接检查，确保资源、导航、搜索和 canonical URL 使用相同路径。只有检查通过的构建产物才会进入部署步骤。
+
+### 其他静态托管
 
 默认部署到域名根目录。需要 canonical URL 或子路径时，在构建前设置环境变量。例如 PowerShell：
 
