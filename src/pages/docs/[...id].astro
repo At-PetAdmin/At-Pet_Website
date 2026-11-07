@@ -1,0 +1,68 @@
+---
+import { render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Icon from '../../components/Icon.astro';
+import { getDocs, docUrl, sections } from '../../lib/site';
+
+export async function getStaticPaths() {
+  return (await getDocs()).map(doc => ({ params: { id: doc.id }, props: { doc } }));
+}
+interface Props { doc: CollectionEntry<'docs'>; }
+const { doc } = Astro.props;
+const docs = await getDocs();
+const { Content, headings } = await render(doc);
+const currentIndex = docs.findIndex(item => item.id === doc.id);
+const previous = docs[currentIndex - 1];
+const next = docs[currentIndex + 1];
+const toc = headings.filter(heading => heading.depth === 2 || heading.depth === 3);
+---
+<Base title={doc.data.title} description={doc.data.description} active="docs">
+  <div class="docs-shell">
+    <aside class="docs-sidebar" aria-label="文档导航">
+      <div class="sidebar-heading"><Icon name="book" size={18} /> 使用文档</div>
+      <nav>{sections.map(section => <div class="nav-group"><h2>{section}</h2>{docs.filter(item => item.data.section === section).map(item => <a href={docUrl(item.id)} aria-current={item.id === doc.id ? 'page' : undefined}>{item.data.title}</a>)}</div>)}</nav>
+      <a class="sidebar-source" href={doc.data.source}><Icon name="github" size={16} /> 查看上游原文 <Icon name="external" size={13} /></a>
+    </aside>
+    <main id="main" class="doc-main">
+      <details class="mobile-doc-nav"><summary>文档目录 <span>{doc.data.title}</span></summary><nav aria-label="移动端文档目录">{docs.map(item => <a href={docUrl(item.id)} aria-current={item.id === doc.id ? 'page' : undefined}>{item.data.title}</a>)}</nav></details>
+      <div class="breadcrumbs"><a href={docUrl('introduction')}>文档</a><span>/</span><span>{doc.data.section}</span></div>
+      <header class="doc-heading"><h1>{doc.data.title}</h1><p>{doc.data.description}</p></header>
+      {toc.length > 0 && <details class="mobile-toc"><summary>本页内容</summary><nav aria-label="本页章节">{toc.map(heading => <a href={`#${heading.slug}`}>{heading.text}</a>)}</nav></details>}
+      <article class="prose"><Content /></article>
+      <div class="doc-source-note"><span>内容依据 At-Pet 上游文档整理</span><a href={doc.data.source}>查阅原文 <Icon name="external" size={13} /></a></div>
+      <nav class="page-navigation" aria-label="前后文档">
+        {previous ? <a href={docUrl(previous.id)}><span>上一篇</span><strong>{previous.data.title}</strong></a> : <span />}
+        {next && <a href={docUrl(next.id)} class="next"><span>下一篇</span><strong>{next.data.title}<Icon name="arrow" size={17} /></strong></a>}
+      </nav>
+    </main>
+    <aside class="table-of-contents" aria-label="本页目录"><p>本页内容</p><nav>{toc.map(heading => <a class:list={{ nested: heading.depth === 3 }} href={`#${heading.slug}`}>{heading.text}</a>)}</nav><a class="toc-top" href="#main">回到顶部 ↑</a></aside>
+  </div>
+  <script>
+    document.querySelectorAll<HTMLPreElement>('.prose pre').forEach(pre => {
+      const button = document.createElement('button');
+      button.className = 'copy-code';
+      button.textContent = '复制';
+      button.setAttribute('aria-label', '复制代码');
+      button.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(pre.querySelector('code')?.textContent || '');
+          button.textContent = '已复制';
+        } catch { button.textContent = '请手动选择复制'; }
+        setTimeout(() => { button.textContent = '复制'; }, 2200);
+      });
+      pre.append(button);
+    });
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('.table-of-contents nav a')];
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(entries => {
+        const entry = entries.find(item => item.isIntersecting);
+        if (entry) links.forEach(link => {
+          if (decodeURIComponent(link.hash.slice(1)) === entry.target.id) link.setAttribute('aria-current', 'location');
+          else link.removeAttribute('aria-current');
+        });
+      }, { rootMargin: '-10% 0px -70% 0px' });
+      document.querySelectorAll('.prose h2, .prose h3').forEach(heading => observer.observe(heading));
+    }
+  </script>
+</Base>

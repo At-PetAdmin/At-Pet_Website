@@ -1,0 +1,71 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { url, docUrl, repository, getDocs, sections } from '../lib/site';
+const docs = await getDocs();
+const trails = [
+  { icon: 'download', title: '第一次见面', text: '下载、启动，把第一只桌宠带到桌面。', id: 'installation', label: '开始安装' },
+  { icon: 'pet', title: '认识你的桌宠', text: '戳一戳、挂在窗口上，或召唤全员上班。', id: 'interaction', label: '了解日常互动' },
+  { icon: 'plug', title: '一起工作', text: '接收 Agent 事件，让工作状态变得看得见。', id: 'agents', label: '连接你的 Agent' },
+];
+---
+<Base active="home">
+  <main id="main" class="home-main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="welcome-line"><span class="tiny-paw">✳</span> 欢迎来到 At-Pet 文档</p>
+        <h1 id="hero-title">桌面上，<br />多一个小伙伴</h1>
+        <p class="hero-description">让桌宠陪你写代码、等任务，也陪你休息片刻。<br class="desktop-break" />从第一次见面，到一起工作，从这里开始。</p>
+        <div class="hero-actions"><a class="button primary" href={docUrl('installation')}>开始使用 <Icon name="arrow" size={18} /></a><a class="button secondary" href={`${repository}/releases/latest`}><Icon name="download" size={18} /> 下载 At-Pet</a></div>
+        <p class="platform-note"><span class="windows-mark" aria-hidden="true">⊞</span> Windows 10 / 11 <span>支持 amd64 与 ARM64</span></p>
+      </div>
+      <div class="hero-scene" aria-label="At-Pet 桌面陪伴示意">
+        <div class="scene-window">
+          <div class="scene-toolbar"><div class="window-dots"><i></i><i></i><i></i></div><span>今天也一起加油</span><span aria-hidden="true">⌑</span></div>
+          <div class="scene-content"><span class="scene-file"><Icon name="code" size={15} /> hello-world.ts</span><div class="scene-code" aria-hidden="true"><span><i>01</i><em>const</em> companion = &#123;</span><span><i>02</i>　name: <b>'At-Pet'</b>,</span><span><i>03</i>　here: <em>true</em>,</span><span><i>04</i>　withYou: <b>'every day'</b></span><span><i>05</i>&#125;;</span></div><div class="scene-status"><span class="status-dot"></span> 准备好，陪你开始下一件事。</div></div>
+          <div class="pet-bubble"><span class="bubble-message" role="status" aria-live="polite">我在这儿陪你。</span><span class="bubble-heart" aria-hidden="true">♡</span></div>
+          <button class="hero-pet" type="button" aria-label="戳一戳桌宠" title="戳一戳">
+            <img src={url('images/logo.png')} alt="探出脑袋的黄色猫咪" width="1440" height="1440" fetchpriority="high" />
+          </button>
+        </div>
+        <span class="scene-caption">戳一戳，和它打个招呼。</span>
+      </div>
+    </section>
+    <section class="start-section" aria-labelledby="start-title">
+      <div class="section-heading"><h2 id="start-title">从这里开始</h2><p>按你的节奏，认识 At-Pet。</p></div>
+      <div class="start-grid">{trails.map(item => <a class="start-card" href={docUrl(item.id)}><span class={`card-icon ${item.icon}`}><Icon name={item.icon} size={23} /></span><h3>{item.title}</h3><p>{item.text}</p><span class="card-link">{item.label}<Icon name="arrow" size={17} /></span></a>)}</div>
+    </section>
+    <section class="handbook" aria-labelledby="handbook-title">
+      <div class="handbook-intro"><span class="outline-icon"><Icon name="book" size={26} /></span><h2 id="handbook-title">一本桌宠手册</h2><p>想给桌宠换个模样，<br />还是让它接上工作流？<br />在这里找到答案。</p><a class="text-link" href={docUrl('introduction')}>阅读完整文档 <Icon name="arrow" size={17} /></a></div>
+      <div class="handbook-links">{sections.map(section => <div><h3>{section}</h3>{docs.filter(doc => doc.data.section === section).map(doc => <a href={docUrl(doc.id)}>{doc.data.title}<span aria-hidden="true">↗</span></a>)}</div>)}</div>
+    </section>
+    <aside class="contribute-note"><div><Icon name="github" size={23} /><p><strong>让这个小项目，慢慢长大。</strong><span>发现问题、分享桌宠，或为文档添上一笔。</span></p></div><a href={`${repository}/discussions`}>参与讨论 <Icon name="external" size={16} /></a></aside>
+  </main>
+  <script>
+    const pet = document.querySelector<HTMLButtonElement>('.hero-pet');
+    const image = pet?.querySelector('img');
+    const bubble = document.querySelector<HTMLElement>('.pet-bubble');
+    const message = bubble?.querySelector<HTMLElement>('.bubble-message');
+    const greetings = ['嘿，被你发现啦！', '今天也一起加油。', '记得起来活动一下！', '我在这儿陪你。'];
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let greeting = 0;
+    pet?.addEventListener('click', () => {
+      if (!message || !image || !bubble) return;
+      message.textContent = greetings[greeting++ % greetings.length];
+      if (reducedMotion.matches) return;
+      // Restart the response on each poke so fast clicks never queue animations.
+      image.getAnimations().forEach(animation => animation.cancel());
+      bubble.getAnimations().forEach(animation => animation.cancel());
+      image.animate([
+        { transform: 'translateY(0) rotate(0deg)' },
+        { transform: 'translateY(6%) rotate(-4deg)', offset: 0.35 },
+        { transform: 'translateY(-2%) rotate(2deg)', offset: 0.7 },
+        { transform: 'translateY(0) rotate(0deg)' },
+      ], { duration: 620, easing: 'cubic-bezier(.22,.7,.3,1)' });
+      bubble.animate([
+        { transform: 'translateY(4px) scale(.94) rotate(2deg)', opacity: 0.5 },
+        { transform: 'translateY(0) scale(1) rotate(2deg)', opacity: 1 },
+      ], { duration: 280, easing: 'ease-out' });
+    });
+  </script>
+</Base>

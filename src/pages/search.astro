@@ -1,0 +1,53 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import { getDocs, docUrl } from '../lib/site';
+const docs = await getDocs();
+const index = docs.map(doc => ({ title: doc.data.title, description: doc.data.description, section: doc.data.section, href: docUrl(doc.id), body: doc.body || '' }));
+---
+<Base title="搜索文档">
+  <main id="main" class="search-page">
+    <div class="search-heading"><span class="outline-icon"><Icon name="search" size={26} /></span><h1>想了解些什么？</h1><p>查找安装步骤、桌宠配置和 Agent 接入说明。</p></div>
+    <form id="search-form" role="search"><label class="sr-only" for="search-input">搜索全部文档</label><div class="search-field"><Icon name="search" /><input id="search-input" name="q" type="search" placeholder="试试「语录」「pet.json」或「Agent」" autocomplete="off" /><button type="submit">搜索</button></div></form>
+    <p id="search-status" class="search-status" role="status" aria-live="polite">全部 {docs.length} 篇文档</p>
+    <div id="search-results" class="search-results">{index.map(doc => <a class="search-result" href={doc.href}><span>{doc.section}</span><h2>{doc.title}</h2><p>{doc.description}</p></a>)}</div>
+    <noscript><p class="no-script-note">浏览器尚未启用 JavaScript，你可以通过上方的完整文档列表浏览内容。</p></noscript>
+    <script id="document-index" type="application/json" set:html={JSON.stringify(index).replace(/</g, '\u003c')} />
+  </main>
+  <script>
+    interface SearchDocument { title: string; description: string; section: string; href: string; body: string; }
+    const documents: SearchDocument[] = JSON.parse(document.querySelector('#document-index')?.textContent || '[]');
+    const input = document.querySelector<HTMLInputElement>('#search-input')!;
+    const results = document.querySelector<HTMLElement>('#search-results')!;
+    const status = document.querySelector<HTMLElement>('#search-status')!;
+    const normalize = (value: string) => value.toLocaleLowerCase().normalize('NFKC');
+    function search() {
+      const query = input.value.trim();
+      const terms = normalize(query).split(/\s+/).filter(Boolean);
+      const matches = documents.map(doc => {
+        const body = normalize(`${doc.title} ${doc.description} ${doc.body}`);
+        const score = terms.reduce((total, term) => total + (normalize(doc.title).includes(term) ? 10 : 0) + (normalize(doc.description).includes(term) ? 4 : 0) + (body.includes(term) ? 1 : 0), 0);
+        return { doc, score, match: terms.every(term => body.includes(term)) };
+      }).filter(item => item.match).sort((a, b) => b.score - a.score);
+      results.replaceChildren();
+      status.textContent = query ? `找到 ${matches.length} 篇与「${query}」相关的文档` : `全部 ${documents.length} 篇文档`;
+      matches.forEach(({ doc }) => {
+        const link = document.createElement('a'); link.className = 'search-result'; link.href = doc.href;
+        const section = document.createElement('span'); section.textContent = doc.section;
+        const title = document.createElement('h2'); title.textContent = doc.title;
+        const description = document.createElement('p'); description.textContent = doc.description;
+        link.append(section, title, description); results.append(link);
+      });
+      if (!matches.length) {
+        const empty = document.createElement('p'); empty.className = 'search-empty'; empty.textContent = '暂时没有找到。试试更短的关键词，例如「安装」或「动画」。'; results.append(empty);
+      }
+      const location = new URL(window.location.href);
+      if (query) location.searchParams.set('q', query); else location.searchParams.delete('q');
+      history.replaceState(null, '', location);
+    }
+    input.value = new URLSearchParams(location.search).get('q') || '';
+    input.addEventListener('input', search);
+    document.querySelector('#search-form')?.addEventListener('submit', event => { event.preventDefault(); search(); });
+    search();
+  </script>
+</Base>

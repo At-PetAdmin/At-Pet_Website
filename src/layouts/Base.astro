@@ -1,0 +1,88 @@
+---
+import '../styles/global.css';
+import Icon from '../components/Icon.astro';
+import { url, repository } from '../lib/site';
+interface Props { title?: string; description?: string; active?: string; }
+const { title, description = 'At-Pet 使用文档：让桌宠陪你工作。从安装、宠物定制到 Agent 事件接入，找到你需要的指南。', active = '' } = Astro.props;
+const pageTitle = title ? `${title} · At-Pet 文档` : 'At-Pet 文档 · 桌面上的小小陪伴';
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefined;
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#fafafa" />
+    <meta name="generator" content={Astro.generator} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <link rel="icon" type="image/png" href={url('images/logo.png')} />
+    <title>{pageTitle}</title>
+    <script is:inline>
+      try { document.documentElement.dataset.theme = localStorage.getItem('at-pet-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch {}
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳转到正文</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href={url()} aria-label="At-Pet 文档首页">
+          <span class="brand-mark"><img src={url('images/logo.png')} alt="" width="42" height="42" /></span>
+          <span>At-Pet</span><span class="brand-divider"></span><span class="brand-label">文档</span>
+        </a>
+        <nav class="desktop-nav" aria-label="主导航">
+          <a class:list={{ selected: active === 'home' }} href={url()} aria-current={active === 'home' ? 'page' : undefined}>首页</a>
+          <a class:list={{ selected: active === 'docs' }} href={url('docs/introduction/')} aria-current={active === 'docs' ? 'true' : undefined}>使用文档</a>
+          <a href={`${repository}/releases/latest`}>下载</a>
+        </nav>
+        <div class="header-actions">
+          <a class="search-trigger" href={url('search/')} aria-label="搜索文档"><Icon name="search" size={17} /><span>搜索文档</span><kbd>Ctrl K</kbd></a>
+          <button class="icon-button" id="theme-toggle" aria-label="切换深色模式" title="切换明暗主题"><Icon name="sun" /></button>
+          <a class="icon-button github-link" href={repository} aria-label="在 GitHub 查看 At-Pet" title="GitHub"><Icon name="github" /></a>
+          <button class="icon-button mobile-menu-toggle" aria-label="打开导航" aria-controls="mobile-nav" aria-expanded="false"><Icon name="menu" /></button>
+        </div>
+      </div>
+      <nav id="mobile-nav" class="mobile-nav" aria-label="移动端主导航" hidden>
+        <a href={url()}>首页</a><a href={url('docs/introduction/')}>使用文档</a><a href={`${repository}/releases/latest`}>下载 At-Pet</a><a href={repository}>GitHub 仓库</a>
+      </nav>
+    </header>
+    <slot />
+    <footer class="site-footer">
+      <a class="footer-brand" href={url()}>At-Pet <span>桌面上的小小陪伴。</span></a>
+      <div><a href={url('upstream-license.txt')}>上游 MIT 许可</a><a href={repository}>GitHub</a><span>用 Astro 构建</span></div>
+    </footer>
+    <script>
+      const themeButton = document.querySelector<HTMLButtonElement>('#theme-toggle');
+      function updateThemeLabel() {
+        themeButton?.setAttribute('aria-label', document.documentElement.dataset.theme === 'dark' ? '切换浅色模式' : '切换深色模式');
+      }
+      updateThemeLabel();
+      themeButton?.addEventListener('click', () => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = theme;
+        try { localStorage.setItem('at-pet-theme', theme); } catch {}
+        updateThemeLabel();
+      });
+      const toggle = document.querySelector<HTMLButtonElement>('.mobile-menu-toggle');
+      const menu = document.querySelector<HTMLElement>('#mobile-nav');
+      toggle?.addEventListener('click', () => {
+        if (!menu) return;
+        menu.hidden = !menu.hidden;
+        toggle.setAttribute('aria-expanded', String(!menu.hidden));
+        toggle.setAttribute('aria-label', menu.hidden ? '打开导航' : '关闭导航');
+      });
+      document.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+          event.preventDefault();
+          const input = document.querySelector<HTMLInputElement>('#search-input');
+          if (input) input.focus();
+          else { const link = document.querySelector<HTMLAnchorElement>('.search-trigger'); if (link) window.location.href = link.href; }
+        }
+        if (event.key === 'Escape' && menu && toggle) { menu.hidden = true; toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-label', '打开导航'); }
+      });
+    </script>
+  </body>
+</html>
