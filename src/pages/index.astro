@@ -22,7 +22,17 @@ const trails = [
       <div class="hero-scene" aria-label="At-Pet 桌面陪伴示意">
         <div class="scene-window">
           <div class="scene-toolbar"><div class="window-dots"><i></i><i></i><i></i></div><span>今天也一起加油</span><span aria-hidden="true">⌑</span></div>
-          <div class="scene-content"><span class="scene-file"><Icon name="code" size={15} /> hello-world.ts</span><div class="scene-code" aria-hidden="true"><span><i>01</i><em>const</em> companion = &#123;</span><span><i>02</i>　name: <b>'At-Pet'</b>,</span><span><i>03</i>　here: <em>true</em>,</span><span><i>04</i>　withYou: <b>'every day'</b></span><span><i>05</i>&#125;;</span></div><div class="scene-status"><span class="status-dot"></span> 准备好，陪你开始下一件事。</div></div>
+          <div class="scene-content">
+            <span class="scene-file"><Icon name="code" size={15} /> companion.cpp</span>
+            <div class="scene-code" aria-hidden="true">
+              <span><i>01</i><em>struct</em> Companion &#123;</span>
+              <span><i>02</i>　<em>const char*</em> name = <b>"At-Pet"</b>;</span>
+              <span><i>03</i>　<em>bool</em> here = <em>true</em>;</span>
+              <span><i>04</i>　<em>bool</em> withYou = <em>true</em>;</span>
+              <span><i>05</i>&#125;;</span>
+            </div>
+            <div class="scene-status"><span class="status-dot"></span> 准备好，陪你开始下一件事。</div>
+          </div>
           <div class="pet-bubble"><span class="bubble-message" role="status" aria-live="polite">我在这儿陪你。</span><span class="bubble-heart" aria-hidden="true">♡</span></div>
           <button class="hero-pet" type="button" aria-label="戳一戳桌宠" title="戳一戳">
             <img src={url('images/logo.png')} alt="探出脑袋的黄色猫咪" width="1440" height="1440" fetchpriority="high" />
