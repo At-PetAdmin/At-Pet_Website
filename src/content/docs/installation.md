@@ -36,6 +36,19 @@ source: https://github.com/At-PetAdmin/At-Pet/blob/main/README_CN.md
 
 完整操作见 [日常互动](../interaction/)。
 
+## 升级到新版本
+
+1. 退出正在运行的 At-Pet。
+2. 下载对应架构的发布压缩包，解压替换程序目录。设置、宠物库和语录包保存在用户数据目录，不受影响。
+3. 启动新版本。设置中的“获取更新”只负责检查和下载，不会自动替换正在运行的文件。
+
+从 1.3.4 起，本地 API 除 `GET /health` 外都需要 Bearer 凭证。升级后要同步更新已安装的 hook、插件与桥接脚本，否则事件发送端会被 `401` 拒绝：
+
+- Node 集成要保持 `client-auth.mjs` 与入口脚本在同一目录、同为当前版本。
+- Claude Code 原生 HTTP hook 需要在启动它的 PowerShell 中设置 `AT_PET_API_TOKEN_CLAUDECODE`，并在 hook 配置里声明 `allowedEnvVars`。
+
+完整步骤见 [本地 API 鉴权](../local-api-auth/)。
+
 ## 校验下载文件
 
 正式发布通常同时提供 `.sha256` 文件。使用 PowerShell 计算压缩包的 SHA-256，并与同一版本的校验文件比较：
