@@ -58,38 +58,57 @@ const toc = headings.filter(heading => heading.depth === 2 || heading.depth === 
       const arrow = link.querySelector<HTMLSpanElement>('.nav-arrow');
       if (!arrow) continue;
       let animation: Animation | undefined;
+      let hovered = false;
+      let focused = false;
+      let visible = false;
+      // Read the painted state first so a reversed animation continues from where it is,
+      // instead of snapping back to the CSS start values.
+      const painted = () => {
+        const style = getComputedStyle(arrow);
+        return { opacity: style.opacity, transform: style.transform };
+      };
+      const clear = () => {
+        arrow.style.opacity = '';
+        arrow.style.transform = '';
+      };
       const show = () => {
+        const from = painted();
         animation?.cancel();
+        clear();
         if (reduceMotion.matches) {
           arrow.style.opacity = '1';
           arrow.style.transform = 'translate(0, 0)';
           return;
         }
-        arrow.style.opacity = '';
-        arrow.style.transform = '';
-        animation = arrow.animate([
-          { opacity: 0, transform: 'translate(-6px, 6px)' },
-          { opacity: 1, transform: 'translate(0, 0)' },
-        ], { duration: 240, delay: 110, easing: 'cubic-bezier(.22,.7,.28,1)', fill: 'both' });
+        const fresh = Number(from.opacity) < 0.05;
+        animation = arrow.animate([from, { opacity: 1, transform: 'translate(0, 0)' }],
+          { duration: 240, delay: fresh ? 110 : 0, easing: 'cubic-bezier(.22,.7,.28,1)', fill: 'both' });
       };
       const hide = () => {
+        const from = painted();
         animation?.cancel();
+        clear();
         if (reduceMotion.matches) {
           arrow.style.opacity = '0';
           arrow.style.transform = 'translate(-6px, 6px)';
           return;
         }
-        arrow.style.opacity = '';
-        arrow.style.transform = '';
-        animation = arrow.animate([
-          { opacity: 1, transform: 'translate(0, 0)' },
-          { opacity: 0, transform: 'translate(7px, -7px)' },
-        ], { duration: 200, easing: 'cubic-bezier(.4, 0, .2, 1)', fill: 'both' });
+        animation = arrow.animate([from, { opacity: 0, transform: 'translate(7px, -7px)' }],
+          { duration: 200, easing: 'cubic-bezier(.4, 0, .2, 1)', fill: 'both' });
       };
-      link.addEventListener('pointerenter', show);
-      link.addEventListener('pointerleave', hide);
-      link.addEventListener('focus', show);
-      link.addEventListener('blur', hide);
+      // Hover and keyboard focus are independent: the arrow stays while either one holds
+      // the link, so a pointer leave does not hide it under the focus ring (and vice versa).
+      const sync = () => {
+        const wanted = hovered || focused;
+        if (wanted === visible) return;
+        visible = wanted;
+        if (wanted) show();
+        else hide();
+      };
+      link.addEventListener('pointerenter', () => { hovered = true; sync(); });
+      link.addEventListener('pointerleave', () => { hovered = false; sync(); });
+      link.addEventListener('focus', () => { focused = true; sync(); });
+      link.addEventListener('blur', () => { focused = false; sync(); });
     }
     const links = [...document.querySelectorAll<HTMLAnchorElement>('.table-of-contents nav a')];
     if ('IntersectionObserver' in window) {
