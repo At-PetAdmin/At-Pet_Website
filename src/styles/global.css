@@ -677,7 +677,11 @@ html {
   margin-bottom:8px
 }
 .nav-group a {
-  display:block;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
   padding:7px 12px;
   border-radius:5px;
   color:var(--muted);
@@ -691,6 +695,33 @@ html {
   color:var(--accent);
   background:var(--accent-bg);
   font-weight:550
+}
+.nav-group a::after {
+  content:"";
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:2px;
+  height:1px;
+  background:currentColor;
+  opacity:.6;
+  transform:scaleX(0);
+  transform-origin:left center;
+  transition:transform .3s cubic-bezier(.22,.7,.28,1);
+  pointer-events:none
+}
+.nav-group a:hover::after,
+.nav-group a:focus-visible::after {
+  transform:scaleX(1)
+}
+.nav-arrow {
+  display:inline-flex;
+  flex:0 0 auto;
+  opacity:0;
+  transform:translate(-6px,6px)
+}
+.nav-arrow svg {
+  transform:rotate(-45deg)
 }
 .sidebar-source {
   display:flex;

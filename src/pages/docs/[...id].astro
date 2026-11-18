@@ -21,7 +21,7 @@ const toc = headings.filter(heading => heading.depth === 2 || heading.depth === 
   <div class="docs-shell">
     <aside class="docs-sidebar" aria-label="文档导航">
       <div class="sidebar-heading"><Icon name="book" size={18} /> 使用文档</div>
-      <nav>{sections.map(section => <div class="nav-group"><h2>{section}</h2>{docs.filter(item => item.data.section === section).map(item => <a href={docUrl(item.id)} aria-current={item.id === doc.id ? 'page' : undefined}>{item.data.title}</a>)}</div>)}</nav>
+      <nav>{sections.map(section => <div class="nav-group"><h2>{section}</h2>{docs.filter(item => item.data.section === section).map(item => <a href={docUrl(item.id)} aria-current={item.id === doc.id ? 'page' : undefined}><span>{item.data.title}</span><span class="nav-arrow" aria-hidden="true"><Icon name="arrow" size={13} /></span></a>)}</div>)}</nav>
       <a class="sidebar-source" href={doc.data.source}><Icon name="github" size={16} /> 查看上游原文 <Icon name="external" size={13} /></a>
     </aside>
     <main id="main" class="doc-main">
@@ -53,6 +53,63 @@ const toc = headings.filter(heading => heading.depth === 2 || heading.depth === 
       });
       pre.append(button);
     });
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    for (const link of document.querySelectorAll<HTMLAnchorElement>('.nav-group a')) {
+      const arrow = link.querySelector<HTMLSpanElement>('.nav-arrow');
+      if (!arrow) continue;
+      let animation: Animation | undefined;
+      let hovered = false;
+      let focused = false;
+      let visible = false;
+      // Read the painted state first so a reversed animation continues from where it is,
+      // instead of snapping back to the CSS start values.
+      const painted = () => {
+        const style = getComputedStyle(arrow);
+        return { opacity: style.opacity, transform: style.transform };
+      };
+      const clear = () => {
+        arrow.style.opacity = '';
+        arrow.style.transform = '';
+      };
+      const show = () => {
+        const from = painted();
+        animation?.cancel();
+        clear();
+        if (reduceMotion.matches) {
+          arrow.style.opacity = '1';
+          arrow.style.transform = 'translate(0, 0)';
+          return;
+        }
+        const fresh = Number(from.opacity) < 0.05;
+        animation = arrow.animate([from, { opacity: 1, transform: 'translate(0, 0)' }],
+          { duration: 240, delay: fresh ? 110 : 0, easing: 'cubic-bezier(.22,.7,.28,1)', fill: 'both' });
+      };
+      const hide = () => {
+        const from = painted();
+        animation?.cancel();
+        clear();
+        if (reduceMotion.matches) {
+          arrow.style.opacity = '0';
+          arrow.style.transform = 'translate(-6px, 6px)';
+          return;
+        }
+        animation = arrow.animate([from, { opacity: 0, transform: 'translate(7px, -7px)' }],
+          { duration: 200, easing: 'cubic-bezier(.4, 0, .2, 1)', fill: 'both' });
+      };
+      // Hover and keyboard focus are independent: the arrow stays while either one holds
+      // the link, so a pointer leave does not hide it under the focus ring (and vice versa).
+      const sync = () => {
+        const wanted = hovered || focused;
+        if (wanted === visible) return;
+        visible = wanted;
+        if (wanted) show();
+        else hide();
+      };
+      link.addEventListener('pointerenter', () => { hovered = true; sync(); });
+      link.addEventListener('pointerleave', () => { hovered = false; sync(); });
+      link.addEventListener('focus', () => { focused = true; sync(); });
+      link.addEventListener('blur', () => { focused = false; sync(); });
+    }
     const links = [...document.querySelectorAll<HTMLAnchorElement>('.table-of-contents nav a')];
     if ('IntersectionObserver' in window) {
       const observer = new IntersectionObserver(entries => {
