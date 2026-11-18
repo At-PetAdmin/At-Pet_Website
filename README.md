@@ -94,6 +94,6 @@ npm run verify
 
 ## 内容来源与许可
 
-文档在 2026-11-07 根据 At-Pet `main` 的提交 `f5a799f31378619405642aed92644f6baffc9880` 整理，主要依据 `README_CN.md`；每篇文档包含上游来源链接。上游后续更新需要人工同步，不会在网站构建时请求 GitHub，也没有把调研草稿中的计划当作已实现功能。
+文档在 2026-11-07 根据 At-Pet `main` 的提交 `f5a799f31378619405642aed92644f6baffc9880` 整理，主要依据 `README_CN.md`；本地 API 鉴权相关页面在 2026-11-18 依据 v1.3.4 的 `docs/local-api-security.md` 核对，并在 v1.3.4 官方 Windows 包上实际执行了文中的 PowerShell 片段（取 token、发事件、创建与取消权限请求、管理员 `/say`、401/403 分支）。每篇文档包含上游来源链接。上游后续更新需要人工同步，不会在网站构建时请求 GitHub，也没有把调研草稿中的计划当作已实现功能。
 
 上游文档使用 MIT 许可，其版权与许可原文保存在 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。用户提供的 Logo 原图保留在 `public/images/logo.png`，不将其额外授权为 MIT。
