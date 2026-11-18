@@ -2,7 +2,7 @@
 title: 构建与贡献
 description: 准备 Windows 构建环境，从源码运行 At-Pet，或为项目贡献改进。
 section: Agent 与开发
-order: 10
+order: 11
 source: https://github.com/At-PetAdmin/At-Pet/blob/main/README_CN.md
 ---
 
